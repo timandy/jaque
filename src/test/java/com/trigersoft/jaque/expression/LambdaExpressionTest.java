@@ -15,7 +15,7 @@
  *
  */
 
-package com.trigersoft.jaque.expressions;
+package com.trigersoft.jaque.expression;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -370,6 +370,13 @@ public class LambdaExpressionTest implements Serializable {
 		assertEquals(pp.apply(c), le.apply(new Object[] { c }));
 	}
 
+	@Test
+	public void testMethodRef2() throws Throwable {
+		// LambdaExpression<Function<Person, ?>> parsed = LambdaExpression.parse((SerializableFunction<Person, ?>)
+		// this::getFunction);
+		LambdaExpression<Function<Person, ?>> parsed1 = LambdaExpression.parse((SerializableFunction<Person, ?>) (p -> getFunction(p)));
+	}
+
 	@Test(expected = NullPointerException.class)
 	public void testParse12() throws Throwable {
 		Function<Integer, Byte> pp = r -> (byte) (int) r;
@@ -642,6 +649,13 @@ public class LambdaExpressionTest implements Serializable {
 		Object a3 = a2.apply(new Object[] { 153 });
 
 		assertEquals(e.apply((short) 23).apply(1.2f, 'g').apply(153), a3);
+	}
+
+	private SerializableFunction<Person, Integer> getFunction(Person p) {
+		if (p.getHeight() > 150) {
+			return Person::getHeight;
+		}
+		return Person::getAge;
 	}
 
 	private int getSomething() {

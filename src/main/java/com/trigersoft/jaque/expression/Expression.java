@@ -82,6 +82,10 @@ public abstract class Expression {
 		_boxers = boxers;
 	}
 
+	private boolean isComparable() {
+		return Comparable.class.isAssignableFrom(getResultType());
+	}
+
 	private boolean isNumeric() {
 		return isNumeric(getResultType());
 	}
@@ -264,10 +268,13 @@ public abstract class Expression {
 	}
 
 	private static BinaryExpression createNumericComparison(int expressionType, Expression first, Expression second) {
-		if (!first.isNumeric())
-			throw new IllegalArgumentException(first.getResultType().toString());
-		if (!second.isNumeric())
-			throw new IllegalArgumentException(second.getResultType().toString());
+
+		if (!first.isComparable() || !second.isComparable()) {
+			if (!first.isNumeric())
+				throw new IllegalArgumentException(first.getResultType().toString());
+			if (!second.isNumeric())
+				throw new IllegalArgumentException(second.getResultType().toString());
+		}
 
 		return new BinaryExpression(expressionType, Boolean.TYPE, null, first, second);
 	}

@@ -115,15 +115,15 @@ final class Interpreter implements ExpressionVisitor<Function<Object[], ?>> {
 		case ExpressionType.ExclusiveOr:
 			return normalize(xor((Function<Object[], Number>) first, (Function<Object[], Number>) second));
 		case ExpressionType.GreaterThan:
-			return normalize(greaterThan((Function<Object[], Number>) first, (Function<Object[], Number>) second));
+			return normalize(greaterThan((Function<Object[], Comparable>) first, (Function<Object[], Comparable>) second));
 		case ExpressionType.GreaterThanOrEqual:
-			return normalize(greaterThanOrEqual((Function<Object[], Number>) first, (Function<Object[], Number>) second));
+			return normalize(greaterThanOrEqual((Function<Object[], Comparable>) first, (Function<Object[], Comparable>) second));
 		case ExpressionType.LeftShift:
 			return normalize(shiftLeft((Function<Object[], Number>) first, (Function<Object[], Number>) second));
 		case ExpressionType.LessThan:
-			return normalize(lessThan((Function<Object[], Number>) first, (Function<Object[], Number>) second));
+			return normalize(lessThan((Function<Object[], Comparable>) first, (Function<Object[], Comparable>) second));
 		case ExpressionType.LessThanOrEqual:
-			return normalize(lessThanOrEqual((Function<Object[], Number>) first, (Function<Object[], Number>) second));
+			return normalize(lessThanOrEqual((Function<Object[], Comparable>) first, (Function<Object[], Comparable>) second));
 		case ExpressionType.Modulo:
 			return normalize(modulo((Function<Object[], Number>) first, (Function<Object[], Number>) second));
 		case ExpressionType.Multiply:
