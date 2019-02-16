@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.objectweb.asm.AnnotationVisitor;
@@ -46,7 +47,7 @@ final class ExpressionMethodVisitor extends MethodVisitor {
 	private static final Class<?>[] NumericTypeLookup2 = new Class<?>[] { Byte.TYPE, Character.TYPE, Short.TYPE };
 	private static final String LambdaMetafactoryClassInternalName = LambdaMetafactory.class.getName().replace('.', '/');
 
-	private static final HashMap<Class<?>, Class<?>> _primitives;
+	private static final Map<Class<?>, Class<?>> _primitives;
 
 	private ExpressionStack _exprStack;
 
@@ -57,7 +58,7 @@ final class ExpressionMethodVisitor extends MethodVisitor {
 	private Supplier<ConstantExpression> _me;
 
 	static {
-		HashMap<Class<?>, Class<?>> primitives = new HashMap<Class<?>, Class<?>>(8);
+		Map<Class<?>, Class<?>> primitives = new HashMap<Class<?>, Class<?>>(8);
 		primitives.put(Boolean.class, Boolean.TYPE);
 		primitives.put(Byte.class, Byte.TYPE);
 		primitives.put(Character.class, Character.TYPE);
@@ -81,6 +82,11 @@ final class ExpressionMethodVisitor extends MethodVisitor {
 		_classVisitor = classVisitor;
 		_me = me;
 		_argTypes = argTypes;
+	}
+
+	private static Class<?> normalizePrimitive(Class<?> clz) {
+		Class<?> primitive = _primitives.get(clz);
+		return primitive != null ? primitive : clz;
 	}
 
 	private List<ExpressionStack> getBranchUsers(Label label) {
@@ -558,7 +564,7 @@ final class ExpressionMethodVisitor extends MethodVisitor {
 
 				Expression right = firstB.getTrue().pop();
 				Expression left = firstB.getFalse().pop();
-				assert right.getResultType() == left.getResultType();
+				assert normalizePrimitive(right.getResultType()) == normalizePrimitive(left.getResultType()) : "branches must evaluate to same type";
 				parentStack.push(Expression.condition(firstB.getTest(), right, left));
 
 				return parentStack;
@@ -738,6 +744,11 @@ final class ExpressionMethodVisitor extends MethodVisitor {
 		if (hasThis[0]) {
 			arguments = Arrays.copyOfRange(arguments, 1, arguments.length);
 			argsTypes = Arrays.copyOfRange(argsTypes, 1, argsTypes.length);
+		}
+
+		if (argsTypes.length == 0) {
+			_exprStack.push(lambda);
+			return;
 		}
 
 		Class<?>[] parameterTypes = getParameterTypes(argsTypes);

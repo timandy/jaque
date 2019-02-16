@@ -38,8 +38,6 @@ import org.junit.Test;
 import com.trigersoft.jaque.Customer;
 import com.trigersoft.jaque.Fluent;
 import com.trigersoft.jaque.Person;
-import com.trigersoft.jaque.expression.Expression;
-import com.trigersoft.jaque.expression.LambdaExpression;
 
 @SuppressWarnings("serial")
 public class LambdaExpressionTest implements Serializable {
@@ -372,9 +370,18 @@ public class LambdaExpressionTest implements Serializable {
 
 	@Test
 	public void testMethodRef2() throws Throwable {
-		// LambdaExpression<Function<Person, ?>> parsed = LambdaExpression.parse((SerializableFunction<Person, ?>)
-		// this::getFunction);
-		LambdaExpression<Function<Person, ?>> parsed1 = LambdaExpression.parse((SerializableFunction<Person, ?>) (p -> getFunction(p)));
+		LambdaExpression<SerializableFunction<Person, SerializableFunction<Person, Integer>>> parsed = LambdaExpression.parse(this::getFunction);
+		Function<Object[], Function<Object[], ?>> compiled = (Function<Object[], Function<Object[], ?>>) parsed.compile();
+
+		Person p = new Person();
+		p.setAge(1);
+		p.setHeight(2);
+		Function<Object[], ?> delegate = compiled.apply(new Object[] { p });
+		assertEquals(getFunction(p).apply(p), delegate.apply(new Object[] { p }));
+
+		p.setHeight(200);
+		delegate = compiled.apply(new Object[] { p });
+		assertEquals(getFunction(p).apply(p), delegate.apply(new Object[] { p }));
 	}
 
 	@Test(expected = NullPointerException.class)

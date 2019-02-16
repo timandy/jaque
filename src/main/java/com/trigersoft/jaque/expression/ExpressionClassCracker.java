@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandleInfo;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -226,10 +227,11 @@ class ExpressionClassCracker {
 	}
 
 	LambdaExpression<?> lambda(SerializedLambda extracted, ClassLoader lambdaClassLoader) {
+		boolean hasThis = extracted.implMethodKind == MethodHandleInfo.REF_invokeInterface || extracted.implMethodKind == MethodHandleInfo.REF_invokeSpecial
+				|| extracted.implMethodKind == MethodHandleInfo.REF_invokeVirtual;
 		boolean hasCapturedArgs = extracted.capturedArgs != null && extracted.capturedArgs.length > 0;
-		boolean hasThis[] = hasCapturedArgs ? new boolean[1] : null;
-		ExpressionClassVisitor actualVisitor = parseClass(lambdaClassLoader, extracted.implClass, hasCapturedArgs ? () -> {
-			hasThis[0] = true;
+
+		ExpressionClassVisitor actualVisitor = parseClass(lambdaClassLoader, extracted.implClass, hasThis ? () -> {
 			Object instance = extracted.capturedArgs[0];
 			return Expression.constant(instance);
 		} : null, extracted.implMethodName, extracted.implMethodSignature);
@@ -241,13 +243,13 @@ class ExpressionClassCracker {
 		LambdaExpression<?> extractedLambda = Expression.lambda(actualVisitor.getType(), reducedExpression,
 				Collections.unmodifiableList(Arrays.asList(params)));
 
-		if (!hasCapturedArgs)
+		if (!hasCapturedArgs || (hasThis && extracted.capturedArgs.length == 1))
 			return extractedLambda;
 
 		List<Expression> args = new ArrayList<>(params.length);
 
 		int capturedLength = extracted.capturedArgs.length;
-		for (int i = hasThis != null && hasThis[0] ? 1 : 0; i < capturedLength; i++) {
+		for (int i = hasThis ? 1 : 0; i < capturedLength; i++) {
 			Object arg = extracted.capturedArgs[i];
 			if (arg instanceof SerializedLambda) {
 				SerializedLambda argLambda = (SerializedLambda) arg;
